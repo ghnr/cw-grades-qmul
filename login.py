@@ -1,4 +1,4 @@
-import mainwindow
+import cw_grades
 import requests
 import lxml.html
 import re
@@ -9,8 +9,8 @@ def startLogin():
 
 	while True:
 		url = 'https://idcheck.qmul.ac.uk/idcheck'
-		user = mainwindow.main_window().input_user()
-		passw = mainwindow.main_window().input_pass()
+		user = cw_grades.main_window().input_user()
+		passw = cw_grades.main_window().input_pass()
 		if len(user)<=2 or len(passw)<=3:
 			return "Empty Fail"
 		try:
