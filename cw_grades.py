@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from dialog import Ui_Dialog as Form
+from dialogUI import Ui_Dialog as Form
 import loginUI
 import login
 import sys
@@ -26,7 +26,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         layoutList, frameList, frame_labelList, layout_labelList = ([] for _ in range(4))
 
         layout = QtWidgets.QVBoxLayout()
-        aWidget = QtWidgets.QWidget()
+        main_widget = QtWidgets.QWidget()
 
         columnNames = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
         stylesheet = """
@@ -42,38 +42,34 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         for i in range(len(self.data)):
             self.tabList.append(QtWidgets.QWidget())
             frame_labelList.append(QtWidgets.QFrame())
-            frame_labelList[i].setGeometry(QtCore.QRect(100, 285, 400, 65))
+            self.moduleTab.addTab(self.tabList[i], self.data[i]['Module'][0])
+
             layout_labelList.append(QtWidgets.QVBoxLayout(frame_labelList[i]))
+            layoutList.append(QtWidgets.QVBoxLayout(self.tabList[i]))
             self.labelList.append(QtWidgets.QLabel(frame_labelList[i]))
             self.labelList2.append(QtWidgets.QLabel(frame_labelList[i]))
-            self.moduleTab.addTab(self.tabList[i], self.data[i]['Module'][0])
             self.tableList.append(QtWidgets.QTableWidget(self.tabList[i]))
-
-            layoutList.append(QtWidgets.QVBoxLayout(self.tabList[i]))
 
             self.tableList[i].setColumnCount(len(columnNames))
             self.tableList[i].setRowCount(int(len(self.data[i]["Module"])))
-
-
             self.tableList[i].setMaximumHeight(280)
-
             self.tableList[i].setHorizontalHeaderLabels(columnNames)
             self.tableList[i].horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
             self.tableList[i].setColumnWidth(0, 90)
             self.tableList[i].setColumnWidth(1, 170)
-
             self.tableList[i].verticalHeader().setVisible(False)
+            self.tableList[i].setAlternatingRowColors(True)
             self.tableList[i].setStyleSheet(stylesheet)
+
             layout_labelList[i].addWidget(self.labelList[i])
             layout_labelList[i].addWidget(self.labelList2[i])
             self.labelList[i].setAlignment(QtCore.Qt.AlignCenter)
             self.labelList2[i].setAlignment(QtCore.Qt.AlignCenter)
             self.labelList[i].setGeometry(180,300,400,30)
-
+            frame_labelList[i].setGeometry(QtCore.QRect(100, 285, 400, 65))
 
             layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
             frame_labelList[i].setParent(self.tabList[i])
-            self.tableList[i].setAlternatingRowColors(True)
 
         def average_exam_mark(column):
             total = 0
@@ -86,14 +82,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     average_label.setText("")
                     pass
             if count != 0:
-                average_label.setText("Average mark needed for a " + self.table_summary.horizontalHeaderItem(column).text() + ": " + str(round(total/count, 1)))
-
+                average_label.setText("Average mark needed for a {0}: {1}".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total/count, 1))))
 
         self.table_summary.cellPressed.connect(lambda: average_exam_mark(self.table_summary.currentColumn()))
 
         self.moduleTab.setCurrentIndex(0)
-
         layout_summary = QtWidgets.QGridLayout(self.moduleTab.widget(0))
+        layout_summary.addWidget(self.table_summary, 1, 0, QtCore.Qt.AlignCenter)
         self.table_summary.setAlternatingRowColors(True)
         self.table_summary.verticalHeader().setVisible(False)
         self.table_summary.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
@@ -105,21 +100,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.table_summary.horizontalHeaderItem(1).setToolTip("Assumes you have at least attempted all of the coursework so far<p style='white-space:pre'>If there is a coursework that you didn't do and the deadline has passed, then you will need to manually set that coursework mark to 0 in the respective module tab")
         for i in range(9):
             self.table_summary.setItemDelegateForColumn(i,NotEditableTableItem(self.table_summary))
-        layout_summary.addWidget(self.table_summary, 1, 0, QtCore.Qt.AlignCenter)
         weights_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft)
         weights_btn.setText("Get coursework weights")
         weights_btn.setToolTip("Grabs the percentage that coursework makes up for each module. This is a requirement to calculate the marks needed in the exam")
         weights_btn.adjustSize()
+        layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft)
         hide_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        layout_summary.addWidget(hide_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
         hide_btn.setText("Hide exam marks")
         hide_btn.adjustSize()
+        layout_summary.addWidget(hide_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
         show_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        layout_summary.addWidget(show_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
         show_btn.setText("Show exam marks")
         show_btn.setToolTip("Displays the marks needed in the exam to obtain the grade shown")
         show_btn.adjustSize()
+        layout_summary.addWidget(show_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
         average_label = QtWidgets.QLabel(self.moduleTab.widget(0))
         layout_summary.addWidget(average_label, 2, 0, QtCore.Qt.AlignHCenter)
 
@@ -131,10 +125,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         weights_btn.clicked.connect(lambda:add_weights(0))
 
         def hideC():
-            self.table_summary.hideColumn(4)
-            self.table_summary.hideColumn(5)
-            self.table_summary.hideColumn(6)
-            self.table_summary.hideColumn(7)
+            for i in (4,5,6,7):
+                self.table_summary.hideColumn(i)
             MainWindow.setFixedSize(630,400)
             show_btn.show()
             hide_btn.hide()
@@ -143,10 +135,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hideC()
 
         def showC():
-            self.table_summary.showColumn(4)
-            self.table_summary.showColumn(5)
-            self.table_summary.showColumn(6)
-            self.table_summary.showColumn(7)
+            for i in (4,5,6,7):
+                self.table_summary.showColumn(i)
             MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
             hide_btn.show()
             show_btn.hide()
@@ -167,7 +157,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     MainWindow.close()
                     return
                 self.table_summary.setItem(row,3,QtWidgets.QTableWidgetItem(weight))
-
                 timer.singleShot(0, lambda:add_weights(row+1))
             else:
                 timer.stop()
@@ -177,7 +166,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 show_btn.show()
 
                 list_of_cw_weights = [self.table_summary.item(i,3).text() for i in range(len(self.data))]
-
                 weights_file_w = open("weights", "wb")
                 pickle.dump(list_of_cw_weights, weights_file_w)
                 weights_file_w.close()
@@ -198,9 +186,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.moduleTab.currentChanged.connect(lambda:hideC())
 
         layout.addWidget(self.moduleTab)
-        aWidget.setLayout(layout)
+        main_widget.setLayout(layout)
 
-        MainWindow.setCentralWidget(aWidget)
+        MainWindow.setCentralWidget(main_widget)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -218,20 +206,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.table_summary.setItem(i,2,QtWidgets.QTableWidgetItem(grade))
             else:
                 self.table_summary.setItem(i,2,QtWidgets.QTableWidgetItem(grade[5:17]))
-            self.color_cell_value(self.table_summary.item(i, 1))
+            self.paint_cell(self.table_summary.item(i,1))
 
     def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
         self.dict2table()
         self.currPc()
-        self.paintcell()
+        self.cell_color_value()
         self.fillSummary()
         for table in self.tableList:
             table.cellChanged.connect(lambda:self.currPc())
-            table.cellChanged.connect(lambda:self.paintcell())
+            table.cellChanged.connect(lambda:self.cell_color_value())
             table.cellChanged.connect(lambda:self.fillSummary())
 
-        MainWindow.setWindowTitle(_translate("MainWindow", "Grades"))
+        MainWindow.setWindowTitle("Grades")
 
     def dict2table(self):
         for table in self.tableList:
@@ -255,7 +242,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     self.tableList[x].setItem(row, 4, new_item)
             for y in range(4):
                 table.setItemDelegateForColumn(y,NotEditableTableItem(table))
-
             table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContentsOnFirstShow)
 
     @staticmethod
@@ -307,50 +293,42 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 elif sumweights[x]>1.001:
                     self.labelList[x].setText("<span style='font-size:12pt; font-weight:500;'>(Sum of weights is >100%): </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
 
-    def paintcell(self):
-        """ Feeds every mark from the table to the color_cell_value function """
+    def cell_color_value(self):
+        """ Feeds every mark from the table to the paint_cell function """
         for table in self.tableList:
             table.blockSignals(True)
             for x in range(len(self.data)):
                 for row, item in enumerate(self.data[x]["Final Mark"]):
-                    tableitem = table.item(row,4)
-                    self.color_cell_value(tableitem)
+                    table_item = table.item(row,4)
+                    if table_item: #table_item is None if empty
+                        try:
+                            mark = float(table_item.text())
+                            self.paint_cell(table_item, mark)
+                        except ValueError:
+                            table_item.setBackground(QtGui.QBrush())
+                            pass
             table.blockSignals(False)
 
     @staticmethod
-    def color_cell_value(tableitem):
-        """ Sets tableitem cell background to a colour based on its value unless it has an invalid value"""
-        if hasattr(tableitem, "text"):
-            try:
-                f = float(tableitem.text())
-            except ValueError:
-                tableitem.setBackground(QtGui.QBrush())
-                return
-            background = QtGui.QLinearGradient(0, 0, f, 0)
-            background.setColorAt(1.00, QtGui.QColor('#fafafa'))
-            if float(tableitem.text()) < 40:
-                if float(tableitem.text()) == 0:
-                    background = QtGui.QLinearGradient(0, 0, 0.01, 0)
-                    background.setColorAt(1.00, QtGui.QColor('#fafafa'))
-                background.setColorAt(0.00, QtGui.QColor('#ff0000'))
-                background.setColorAt(0.99, QtGui.QColor('#ff0000'))
-            if 40 <= float(tableitem.text()) < 50:
-                background.setColorAt(0.00, QtGui.QColor('#ffdd00'))
-                background.setColorAt(0.99, QtGui.QColor('#ffdd00'))
-            if 50 <= float(tableitem.text()) < 60:
-                background.setColorAt(0.00, QtGui.QColor('#eaff00'))
-                background.setColorAt(0.99, QtGui.QColor('#eaff00'))
-            if 60 <= float(tableitem.text()) < 70:
-                background.setColorAt(0.00, QtGui.QColor('#b7ff00'))
-                background.setColorAt(0.99, QtGui.QColor('#b7ff00'))
-            if 70 <= float(tableitem.text()) < 500:
-                background.setColorAt(0.00, QtGui.QColor('#00ff00'))
-                background.setColorAt(0.99, QtGui.QColor('#00ff00'))
-            elif float(tableitem.text()) >= 500:
-                tableitem.setBackground(QtGui.QBrush((QtGui.QPixmap("kappa.png"))))
-                return
+    def paint_cell(table_item, mark=None, breakpoints=[40, 50, 60, 70], color=["#ff0000","#ffdd00","#eaff00","#b7ff00","#00ff00"]):
+        """ Sets table_item cell background to a colour based on its value unless it has an invalid value"""
+        if not table_item:
+            return
+        if not mark:
+            mark = float(table_item.text())
+        if mark == 0:
+            table_item.setBackground(QtGui.QBrush())
+            return
+        if mark >= 500:
+            table_item.setBackground(QtGui.QBrush((QtGui.QPixmap("kappa.png"))))
+            return
 
-            tableitem.setBackground(QtGui.QBrush(background))
+        i = bisect.bisect(breakpoints, mark)
+        background = QtGui.QLinearGradient(0, 0, mark, 0)
+        background.setColorAt(0.00, QtGui.QColor(color[i]))
+        background.setColorAt(0.99, QtGui.QColor(color[i]))
+        background.setColorAt(1.00, QtGui.QColor('#fafafa'))
+        table_item.setBackground(QtGui.QBrush(background))
 
     @staticmethod
     def mark_to_grade(mark, breakpoints=[40, 50, 60, 70], grades=["Fail","Pass","2:2, Lower Second-Class","2:1, Upper Second-Class","First Class"]):
