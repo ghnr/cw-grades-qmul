@@ -20,9 +20,8 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Login"))
-        self.label.setText(_translate("Dialog", "Nothing here"))
+        Dialog.setWindowTitle("Login")
+        self.label.setText("Nothing here")
 
 
 if __name__ == "__main__":

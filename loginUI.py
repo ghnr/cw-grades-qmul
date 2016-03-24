@@ -40,11 +40,10 @@ class Ui_LoginWindow(object):
         QtCore.QMetaObject.connectSlotsByName(LoginForm)
 
     def retranslateUi(self, LoginForm):
-        _translate = QtCore.QCoreApplication.translate
-        LoginForm.setWindowTitle(_translate("LoginForm", "Login"))
-        self.label_username.setText(_translate("LoginForm", "Username"))
-        self.label_password.setText(_translate("LoginForm", "Password"))
-        self.btn_login.setText(_translate("LoginForm", "Login"))
+        LoginForm.setWindowTitle("Login")
+        self.label_username.setText("Username")
+        self.label_password.setText("Password")
+        self.btn_login.setText("Login")
 
 
 if __name__ == "__main__":
