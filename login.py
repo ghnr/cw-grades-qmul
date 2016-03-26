@@ -49,6 +49,7 @@ def FormatData():
 	for i,due_date in enumerate(newDict["Due Date"]):
 		if due_date == "TODAY": # If the today's date is the due date, the website displays "TODAY"
 			newDict["Due Date"][i] = datetime.today().strftime('%d/%m/%Y')
+			newDict["Issue Date"][i] = datetime.today().strftime('%d/%m/%Y')
 		else:
 			newDict["Due Date"][i] = string_to_date(due_date)
 			newDict["Issue Date"][i] = string_to_date(newDict["Issue Date"][i])
