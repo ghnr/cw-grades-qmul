@@ -76,13 +76,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             count = 0
             for row in range(self.table_summary.rowCount()):
                 try:
-                    total += int(self.table_summary.item(row, column).text())
+                    total += float(self.table_summary.item(row, column).text())
                     count += 1
                 except (AttributeError, ValueError):
                     average_label.setText("")
                     pass
-            if count != 0:
-                average_label.setText("Average mark needed for a {0}: {1}".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total/count, 1))))
+            if count > 0 and column == 1:
+                average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total/count, 1))))
+            elif count > 0:
+                average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total/count, 1))))
 
         self.table_summary.cellPressed.connect(lambda: average_exam_mark(self.table_summary.currentColumn()))
 
@@ -130,6 +132,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             MainWindow.setFixedSize(630,400)
             show_btn.show()
             hide_btn.hide()
+            average_label.setText("")
             if weights_btn.isVisible():
                 show_btn.hide()
         hideC()
@@ -288,10 +291,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             else:
                 self.perclist.append(round((sumprods[x] / sumweights[x]), 2))
                 if self.perclist[x] != 0.0 and sumweights[x]<1.001:
-                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500;'>Your current percentage is: </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
-                    self.labelList2[x].setText("<span style='font-size:12pt; font-weight:500;'>Your current grade is: </span><span style='font-size:12pt'>" + self.mark_to_grade(self.perclist[x]) + "</span>")
+                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>Your current percentage is: </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
+                    self.labelList2[x].setText("<span style='font-size:12pt; font-weight:500'>Your current grade is: </span><span style='font-size:12pt'>" + self.mark_to_grade(self.perclist[x]) + "</span>")
                 elif sumweights[x]>1.001:
-                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500;'>(Sum of weights is >100%): </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
+                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>(Sum of weights is >100%): </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
 
     def cell_color_value(self):
         """ Feeds every mark from the table to the paint_cell function """
