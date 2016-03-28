@@ -281,8 +281,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 sumweights.append(sum(k if isinstance(j,float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
         except KeyError:
             pass
-        sumprods.insert(0,sum(j*k if isinstance(j,float) else 0 for j, k in zip(markList[0:block[0]], weightList[0:block[0]])))
-        sumweights.insert(0,sum(k if isinstance(j,float) else 0 for j, k in zip(markList[0:block[0]], weightList[0:block[0]])))
+        sumprods.insert(0,sum(j*k if isinstance(j,float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
+        sumweights.insert(0,sum(k if isinstance(j,float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
         for x in range(len(sumprods)):
             if sumprods[x] in ("","-") or sumweights[x]==0:
                 self.perclist.append(0.0)
@@ -354,7 +354,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#ff0000'))
                 elif mark<=0:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#00ff00'))
-        except (AttributeError, ValueError) as e:
+        except (AttributeError, ValueError):
             pass
 
 
