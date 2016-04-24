@@ -1,10 +1,11 @@
 import pickle
 import datetime
 import cw_grades
+import sys
 
 if __name__ == '__main__':
     try:
-        file = open("data", "rb")
+        file = open(cw_grades.path("data"), "rb")
         pickle_date = pickle.load(file)
 
         if (datetime.datetime.today() - pickle_date).days >= 1:
@@ -12,10 +13,9 @@ if __name__ == '__main__':
         else:
             pickle_data = pickle.load(file)
             file.close()
-            app = cw_grades.QtWidgets.QApplication(cw_grades.sys.argv)
+            app = cw_grades.QtWidgets.QApplication(sys.argv)
             cw_grades.OpenMainWindow(pickle_data)
             cw_grades.sys.exit(app.exec_())
     except (FileNotFoundError, EOFError):
-        from cw_grades import main
-        main()
+        cw_grades.main()
 

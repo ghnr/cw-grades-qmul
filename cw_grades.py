@@ -3,6 +3,7 @@ from dialogUI import Ui_Dialog as Form
 import loginUI
 import login
 import sys
+import os
 import bisect
 
 
@@ -103,7 +104,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         for i in range(9):
             self.table_summary.setItemDelegateForColumn(i,NotEditableTableItem(self.table_summary))
         weights_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        weights_btn.setText("Get coursework weights")
+        weights_btn.setText("Get C/W weights")
         weights_btn.setToolTip("Grabs the percentage that coursework makes up for each module. This is a requirement to calculate the marks needed in the exam")
         weights_btn.adjustSize()
         layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft)
@@ -169,13 +170,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 show_btn.show()
 
                 list_of_cw_weights = [self.table_summary.item(i,3).text() for i in range(len(self.data))]
-                weights_file_w = open("weights", "wb")
+                weights_file_w = open(path("weights"), "wb")
                 pickle.dump(list_of_cw_weights, weights_file_w)
                 weights_file_w.close()
 
         try:
             import pickle
-            weights_file_r = open("weights", "rb")
+            weights_file_r = open(path("weights"), "rb")
             pickle_weights = pickle.load(weights_file_r) #have to unwrap layers of pickle
             if len(pickle_weights)==len(self.data):
                 for x in range(len(self.data)):
@@ -323,7 +324,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             table_item.setBackground(QtGui.QBrush())
             return
         if mark >= 500:
-            table_item.setBackground(QtGui.QBrush((QtGui.QPixmap("kappa.png"))))
+            if hasattr(sys,"_MEIPASS"):
+                base_path = sys._MEIPASS
+            else:
+                base_path = os.path.abspath(".")
+            table_item.setBackground(QtGui.QBrush((QtGui.QPixmap(os.path.join(base_path,"kappa.png")))))
             return
 
         i = bisect.bisect(breakpoints, mark)
@@ -416,7 +421,7 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
             self.close()
 
             import main
-            file = open("data", "wb")
+            file = open(path("data"), "wb")
             main.pickle.dump(main.datetime.datetime.today(), file)
             main.pickle.dump(data, file)
             file.close()
@@ -430,6 +435,9 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
         passw = self.lineEdit_password.text()
         return passw
 
+def path(file_path):
+    base_path = os.path.dirname(sys.argv[0])
+    return os.path.join(base_path,file_path)
 
 def OpenMainWindow(data):
     global MainWindow
