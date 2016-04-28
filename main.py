@@ -14,7 +14,7 @@ if __name__ == '__main__':
             pickle_data = pickle.load(file)
             file.close()
             app = cw_grades.QtWidgets.QApplication(sys.argv)
-            cw_grades.OpenMainWindow(pickle_data)
+            cw_grades.open_main_window(pickle_data)
             cw_grades.sys.exit(app.exec_())
     except (FileNotFoundError, EOFError):
         cw_grades.main()

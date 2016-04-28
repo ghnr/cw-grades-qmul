@@ -52,8 +52,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.tableList.append(QtWidgets.QTableWidget(self.tabList[i]))
 
             self.tableList[i].setColumnCount(len(columnNames))
-            self.tableList[i].setRowCount(int(len(self.data[i]["Module"])))
-            self.tableList[i].setMaximumHeight(280)
+            self.tableList[i].setRowCount((len(self.data[i]["Module"])))
             self.tableList[i].setHorizontalHeaderLabels(columnNames)
             self.tableList[i].horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
             self.tableList[i].setColumnWidth(0, 90)
@@ -62,15 +61,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.tableList[i].setAlternatingRowColors(True)
             self.tableList[i].setStyleSheet(stylesheet)
 
+            layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
+            layoutList[i].addWidget(frame_labelList[i], 1, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom)
             layout_labelList[i].addWidget(self.labelList[i])
             layout_labelList[i].addWidget(self.labelList2[i])
             self.labelList[i].setAlignment(QtCore.Qt.AlignCenter)
             self.labelList2[i].setAlignment(QtCore.Qt.AlignCenter)
-            self.labelList[i].setGeometry(180,300,400,30)
-            frame_labelList[i].setGeometry(QtCore.QRect(100, 285, 400, 65))
 
-            layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-            frame_labelList[i].setParent(self.tabList[i])
 
         def average_exam_mark(column):
             total = 0
@@ -102,35 +99,35 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.table_summary.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table_summary.horizontalHeaderItem(1).setToolTip("Assumes you have at least attempted all of the coursework so far<p style='white-space:pre'>If there is a coursework that you didn't do and the deadline has passed, then you will need to manually set that coursework mark to 0 in the respective module tab")
         for i in range(9):
-            self.table_summary.setItemDelegateForColumn(i,NotEditableTableItem(self.table_summary))
+            self.table_summary.setItemDelegateForColumn(i, NotEditableTableItem(self.table_summary))
         weights_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         weights_btn.setText("Get C/W weights")
         weights_btn.setToolTip("Grabs the percentage that coursework makes up for each module. This is a requirement to calculate the marks needed in the exam")
         weights_btn.adjustSize()
-        layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft)
+        layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         hide_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         hide_btn.setText("Hide exam marks")
         hide_btn.adjustSize()
-        layout_summary.addWidget(hide_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
+        layout_summary.addWidget(hide_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
         show_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         show_btn.setText("Show exam marks")
         show_btn.setToolTip("Displays the marks needed in the exam to obtain the grade shown")
         show_btn.adjustSize()
-        layout_summary.addWidget(show_btn, 0, 0, QtCore.Qt.AlignTop|QtCore.Qt.AlignRight)
+        layout_summary.addWidget(show_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
         average_label = QtWidgets.QLabel(self.moduleTab.widget(0))
         layout_summary.addWidget(average_label, 2, 0, QtCore.Qt.AlignHCenter)
 
         timer = QtCore.QTimer()
         timer.setSingleShot(True)
 
-        hide_btn.clicked.connect(lambda:hideC())
-        show_btn.clicked.connect(lambda:showC())
-        weights_btn.clicked.connect(lambda:add_weights(0))
+        hide_btn.clicked.connect(lambda: hideC())
+        show_btn.clicked.connect(lambda: showC())
+        weights_btn.clicked.connect(lambda: add_weights(0))
 
         def hideC():
-            for i in (4,5,6,7):
+            for i in (4, 5, 6, 7):
                 self.table_summary.hideColumn(i)
-            MainWindow.setFixedSize(630,400)
+            MainWindow.setFixedSize(630, 400)
             show_btn.show()
             hide_btn.hide()
             average_label.setText("")
@@ -139,20 +136,27 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hideC()
 
         def showC():
-            for i in (4,5,6,7):
+            for i in (4, 5, 6, 7):
                 self.table_summary.showColumn(i)
             MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
             hide_btn.show()
             show_btn.hide()
 
+        def resize_if_marks_shown():
+            if self.moduleTab.currentIndex() == 0 and hide_btn.isVisible():
+                MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
+            else:
+                MainWindow.setFixedSize(630,400)
+
         def add_weights(row):
-            if row<len(self.data):
+            if row < len(self.data):
+                MainWindow.setWindowTitle("Getting coursework weights...")
                 weight = login.get_weights(self.data[row]['Module'][0])
-                if weight=="Session Error":
+                if weight == "Session Error":
                     dialog = QtWidgets.QDialog(None, QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
                     dialog.ui = Form()
                     dialog.ui.setupUi(dialog)
-                    dialog.ui.label.setText("To get coursework weights, you must log in again. Click OK to continue.")
+                    dialog.ui.label.setText("To get coursework weights, you must log in. Click OK to continue.")
                     dialog.exec_()
                     dialog.show()
                     global form
@@ -160,11 +164,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     form.show()
                     MainWindow.close()
                     return
-                self.table_summary.setItem(row,3,QtWidgets.QTableWidgetItem(weight))
-                timer.singleShot(0, lambda:add_weights(row+1))
+                self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
+                timer.singleShot(0, lambda: add_weights(row+1))
             else:
                 timer.stop()
                 timer.deleteLater()
+                MainWindow.setWindowTitle("Grades")
                 weights_btn.hide()
                 self.fillSummary()
                 show_btn.show()
@@ -178,16 +183,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             import pickle
             weights_file_r = open(path("weights"), "rb")
             pickle_weights = pickle.load(weights_file_r) #have to unwrap layers of pickle
-            if len(pickle_weights)==len(self.data):
+            if len(pickle_weights) == len(self.data):
                 for x in range(len(self.data)):
-                    self.table_summary.setItem(x,3,QtWidgets.QTableWidgetItem(pickle_weights[x]))
+                    self.table_summary.setItem(x, 3, QtWidgets.QTableWidgetItem(pickle_weights[x]))
             weights_file_r.close()
             weights_btn.hide()
         except (FileNotFoundError, EOFError):
             show_btn.hide()
             pass
 
-        self.moduleTab.currentChanged.connect(lambda:hideC())
+        self.moduleTab.currentChanged.connect(lambda: resize_if_marks_shown())
 
         layout.addWidget(self.moduleTab)
         main_widget.setLayout(layout)
@@ -199,18 +204,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def fillSummary(self):
         for i in range(len(self.data)):
-            self.table_summary.setItem(i,0,QtWidgets.QTableWidgetItem(self.data[i]['Module'][0]))
-            if self.perclist[i]!=0:
+            self.table_summary.setItem(i, 0, QtWidgets.QTableWidgetItem(self.data[i]['Module'][0]))
+            if self.perclist[i] != 0:
                 item = QtWidgets.QTableWidgetItem(str(self.perclist[i]))
-                self.table_summary.setItem(i,1,item)
+                self.table_summary.setItem(i, 1, item)
             self.marks_needed(i)
 
             grade = self.mark_to_grade(self.perclist[i])
-            if grade in ("First Class","Fail","Pass") and self.perclist[i]!=0:
-                self.table_summary.setItem(i,2,QtWidgets.QTableWidgetItem(grade))
+            if grade in ("First Class", "Fail", "Pass") and self.perclist[i] != 0:
+                self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade))
             else:
-                self.table_summary.setItem(i,2,QtWidgets.QTableWidgetItem(grade[5:17]))
-            self.paint_cell(self.table_summary.item(i,1))
+                self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade[5:17]))
+            self.paint_cell(self.table_summary.item(i, 1))
 
     def retranslateUi(self, MainWindow):
         self.dict2table()
@@ -245,7 +250,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     new_item.setTextAlignment(QtCore.Qt.AlignCenter)
                     self.tableList[x].setItem(row, 4, new_item)
             for y in range(4):
-                table.setItemDelegateForColumn(y,NotEditableTableItem(table))
+                table.setItemDelegateForColumn(y, NotEditableTableItem(table))
             table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContentsOnFirstShow)
 
     @staticmethod
@@ -268,7 +273,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         del self.perclist[:]
 
         total = 0
-        for i,table in enumerate(self.tableList):
+        for i, table in enumerate(self.tableList):
             for x in range(table.rowCount()):
                 markList.append(self.check_mark(table.item(x, 4).text()))
                 weightList.append(self.perc_to_float(table.item(x,2).text()))
@@ -278,23 +283,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             block[v] = total
         try:
             for y in range(len(block)):
-                sumprods.append(sum(j*k if isinstance(j,float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
-                sumweights.append(sum(k if isinstance(j,float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
+                sumprods.append(sum(j*k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
+                sumweights.append(sum(k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
         except KeyError:
             pass
-        sumprods.insert(0,sum(j*k if isinstance(j,float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
-        sumweights.insert(0,sum(k if isinstance(j,float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
+        sumprods.insert(0, sum(j*k if isinstance(j, float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
+        sumweights.insert(0, sum(k if isinstance(j, float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
         for x in range(len(sumprods)):
-            if sumprods[x] in ("","-") or sumweights[x]==0:
+            if sumprods[x] in ("", "-") or sumweights[x] == 0:
                 self.perclist.append(0.0)
                 self.labelList[x].setText("")
                 self.labelList2[x].setText("")
             else:
                 self.perclist.append(round((sumprods[x] / sumweights[x]), 2))
-                if self.perclist[x] != 0.0 and sumweights[x]<1.001:
+                if self.perclist[x] != 0.0 and sumweights[x] < 1.001:
                     self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>Your current percentage is: </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
                     self.labelList2[x].setText("<span style='font-size:12pt; font-weight:500'>Your current grade is: </span><span style='font-size:12pt'>" + self.mark_to_grade(self.perclist[x]) + "</span>")
-                elif sumweights[x]>1.001:
+                elif sumweights[x] > 1.001:
                     self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>(Sum of weights is >100%): </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
 
     def cell_color_value(self):
@@ -303,7 +308,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             table.blockSignals(True)
             for x in range(len(self.data)):
                 for row, item in enumerate(self.data[x]["Final Mark"]):
-                    table_item = table.item(row,4)
+                    table_item = table.item(row, 4)
                     if table_item: #table_item is None if empty
                         try:
                             mark = float(table_item.text())
@@ -324,7 +329,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             table_item.setBackground(QtGui.QBrush())
             return
         if mark >= 500:
-            if hasattr(sys,"_MEIPASS"):
+            if hasattr(sys, "_MEIPASS"):
                 base_path = sys._MEIPASS
             else:
                 base_path = os.path.abspath(".")
@@ -355,9 +360,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItemDelegateForColumn(j,NotEditableTableItem(self.table_summary))
                 self.table_summary.setItem(row,j,item)
-                if mark>100:
+                if mark > 100:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#ff0000'))
-                elif mark<=0:
+                elif mark <= 0:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#00ff00'))
         except (AttributeError, ValueError):
             pass
@@ -426,28 +431,33 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
             main.pickle.dump(data, file)
             file.close()
 
-            OpenMainWindow(data)
+            open_main_window(data)
 
     def input_user(self):
         user = self.lineEdit_username.text()
         return user
+
     def input_pass(self):
         passw = self.lineEdit_password.text()
         return passw
+
 
 def path(file_path):
     base_path = os.path.dirname(sys.argv[0])
     return os.path.join(base_path,file_path)
 
-def OpenMainWindow(data):
+
+def open_main_window(data):
     global MainWindow
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow(data)
     ui.setupUi(MainWindow)
     MainWindow.show()
 
+
 def main_window():
     return form
+
 
 def main():
     global form
