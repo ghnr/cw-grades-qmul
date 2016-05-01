@@ -1,4 +1,5 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 
 class Ui_Dialog(object):
 
@@ -7,12 +8,15 @@ class Ui_Dialog(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setWordWrap(True)
-        self.verticalLayout.addWidget(self.label)
+        self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignTop)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setCenterButtons(True)
         self.verticalLayout.addWidget(self.buttonBox)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label.setFont(font)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
@@ -21,7 +25,6 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle("Login")
-        self.label.setText("Nothing here")
 
 
 if __name__ == "__main__":
