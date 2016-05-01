@@ -18,4 +18,3 @@ if __name__ == '__main__':
             cw_grades.sys.exit(app.exec_())
     except (FileNotFoundError, EOFError):
         cw_grades.main()
-
