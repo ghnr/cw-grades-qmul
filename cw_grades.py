@@ -30,7 +30,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout()
         main_widget = QtWidgets.QWidget()
 
-        columnNames = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
+        columns = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
         stylesheet = """
         QScrollBar:vertical, QScrollBar:horizontal {
             width:12px;
@@ -51,9 +51,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.labelList2.append(QtWidgets.QLabel(frame_labelList[i]))
             self.tableList.append(QtWidgets.QTableWidget(self.tabList[i]))
 
-            self.tableList[i].setColumnCount(len(columnNames))
+            self.tableList[i].setColumnCount(len(columns))
             self.tableList[i].setRowCount((len(self.data[i]["Module"])))
-            self.tableList[i].setHorizontalHeaderLabels(columnNames)
+            self.tableList[i].setHorizontalHeaderLabels(columns)
             self.tableList[i].horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
             self.tableList[i].setColumnWidth(0, 90)
             self.tableList[i].setColumnWidth(1, 170)
@@ -230,27 +230,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         MainWindow.setWindowTitle("Grades")
 
     def dict2table(self):
-        for table in self.tableList:
-            for x in range(len(self.data)):
-                for row, item in enumerate(self.data[x]["Due Date"]):
+        columns = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
+        for i, table in enumerate(self.tableList):
+            for x, column in enumerate(columns):
+                for row, item in enumerate(self.data[i][column]):
                     new_item = QtWidgets.QTableWidgetItem(item)
-                    self.tableList[x].setItem(row, 0, new_item)
-                for row, item in enumerate(self.data[x]["Coursework Title"]):
-                    new_item = QtWidgets.QTableWidgetItem(item)
-                    self.tableList[x].setItem(row, 1, new_item)
-                for row, item in enumerate(self.data[x]["Weight"]):
-                    new_item = QtWidgets.QTableWidgetItem(item)
-                    self.tableList[x].setItem(row, 2, new_item)
-                for row, item in enumerate(self.data[x]["Mark"]):
-                    new_item = QtWidgets.QTableWidgetItem(item)
-                    new_item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    self.tableList[x].setItem(row, 3, new_item)
-                for row, item in enumerate(self.data[x]["Final Mark"]):
-                    new_item = QtWidgets.QTableWidgetItem(item)
-                    new_item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    self.tableList[x].setItem(row, 4, new_item)
-            for y in range(4):
-                table.setItemDelegateForColumn(y, NotEditableTableItem(table))
+                    self.tableList[i].setItem(row, x, new_item)
+                    if column == "Final Mark":
+                        new_item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    else:
+                        if column == "Mark":
+                            new_item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        table.setItemDelegateForColumn(x, NotEditableTableItem(table))
             table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContentsOnFirstShow)
 
     @staticmethod
