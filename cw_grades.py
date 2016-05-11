@@ -68,7 +68,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
             layoutList[i].addWidget(frame_labelList[i], 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
 
-
         def average_exam_mark(column):
             total = 0
             count = 0
@@ -98,7 +97,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.table_summary.setRowCount(len(self.data))
         self.table_summary.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table_summary.horizontalHeaderItem(1).setToolTip("Assumes you have at least attempted all of the coursework so far<p style='white-space:pre'>If there is a coursework that you didn't do and the deadline has passed, then you will need to manually set that coursework mark to 0 in the respective module tab")
-        for i in range(9):
+        for i in range(8):
             self.table_summary.setItemDelegateForColumn(i, NotEditableTableItem(self.table_summary))
         weights_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         weights_btn.setText("Get C/W weights")
@@ -346,7 +345,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 mark = int(round(100*(i/10 - (curr_perc * cw_weight))/(1.0-cw_weight)))
                 item = QtWidgets.QTableWidgetItem(str(mark))
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.table_summary.setItemDelegateForColumn(j, NotEditableTableItem(self.table_summary))
                 self.table_summary.setItem(row, j, item)
                 if mark > 100:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#ff0000'))
