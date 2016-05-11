@@ -47,8 +47,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
             layout_labelList.append(QtWidgets.QVBoxLayout(frame_labelList[i]))
             layoutList.append(QtWidgets.QVBoxLayout(self.tabList[i]))
-            self.labelList.append(QtWidgets.QLabel(frame_labelList[i]))
-            self.labelList2.append(QtWidgets.QLabel(frame_labelList[i]))
+            self.labelList.append(QtWidgets.QLabel())
+            self.labelList2.append(QtWidgets.QLabel())
             self.tableList.append(QtWidgets.QTableWidget(self.tabList[i]))
 
             self.tableList[i].setColumnCount(len(columns))
@@ -61,12 +61,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.tableList[i].setAlternatingRowColors(True)
             self.tableList[i].setStyleSheet(stylesheet)
 
-            layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
-            layoutList[i].addWidget(frame_labelList[i], 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
             layout_labelList[i].addWidget(self.labelList[i])
             layout_labelList[i].addWidget(self.labelList2[i])
             self.labelList[i].setAlignment(QtCore.Qt.AlignCenter)
             self.labelList2[i].setAlignment(QtCore.Qt.AlignCenter)
+            layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+            layoutList[i].addWidget(frame_labelList[i], 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
+
 
         def average_exam_mark(column):
             total = 0
