@@ -342,6 +342,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             curr_perc = float(self.table_summary.item(row, 1).text())/100
             for i, j in zip(range(4,8), reversed(range(4, 8))):
                 cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
+                if cw_weight == 1.0:
+                    break
+
                 mark = int(round(100*(i/10 - (curr_perc * cw_weight))/(1.0-cw_weight)))
                 item = QtWidgets.QTableWidgetItem(str(mark))
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
