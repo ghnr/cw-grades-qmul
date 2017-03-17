@@ -8,7 +8,6 @@ import bisect
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
-
     def __init__(self, data):
         QtWidgets.QMainWindow.__init__(self)
         self.data = data
@@ -79,9 +78,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     average_label.setText("")
                     pass
             if count > 0 and column == 1:
-                average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total/count, 1))))
+                average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total / count, 1))))
             elif count > 0:
-                average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total/count, 1))))
+                average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total / count, 1))))
 
         self.table_summary.cellPressed.connect(lambda: average_exam_mark(self.table_summary.currentColumn()))
 
@@ -132,6 +131,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             average_label.setText("")
             if weights_btn.isVisible():
                 show_btn.hide()
+        
         hideC()
 
         def showC():
@@ -165,7 +165,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     MainWindow.close()
                     return
                 self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
-                timer.singleShot(0, lambda: add_weights(row+1))
+                timer.singleShot(0, lambda: add_weights(row + 1))
             else:
                 timer.stop()
                 timer.deleteLater()
@@ -182,12 +182,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         try:
             import pickle
             weights_file_r = open(path("weights"), "rb")
-            pickle_weights = pickle.load(weights_file_r) # have to unwrap layers of pickle
+            pickle_weights = pickle.load(weights_file_r)  # have to unwrap layers of pickle
             if len(pickle_weights) == len(self.data):
                 for x in range(len(self.data)):
                     self.table_summary.setItem(x, 3, QtWidgets.QTableWidgetItem(pickle_weights[x]))
+                weights_btn.hide()
+            else:
+                show_btn.hide()
             weights_file_r.close()
-            weights_btn.hide()
+        
         except (FileNotFoundError, EOFError):
             show_btn.hide()
             pass
@@ -205,14 +208,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def fillSummary(self):
         for i in range(len(self.data)):
             self.table_summary.setItem(i, 0, QtWidgets.QTableWidgetItem(self.data[i]['Module'][0]))
-            if self.perclist[i] != 0:
-                item = QtWidgets.QTableWidgetItem(str(self.perclist[i]))
-                self.table_summary.setItem(i, 1, item)
+            item = QtWidgets.QTableWidgetItem(str(self.perclist[i]))
+            self.table_summary.setItem(i, 1, item)
             self.marks_needed(i)
 
             grade = self.mark_to_grade(self.perclist[i])
-            if grade in ("First Class", "Fail", "Pass") and self.perclist[i] != 0:
-                self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade))
+            if grade in ("First Class", "Fail", "Pass"):
+                if self.perclist[i] != "":
+                    self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade))
+                else:
+                    self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem())
             else:
                 self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade[5:17]))
             self.paint_cell(self.table_summary.item(i, 1))
@@ -247,7 +252,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     @staticmethod
     def perc_to_float(percentage):
         """ Takes a percentage of form int% and returns it as a float """
-        return float(percentage.strip('%'))/100
+        return float(percentage.strip('%')) / 100
 
     @staticmethod
     def check_mark(entry):
@@ -274,20 +279,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             block[v] = total
         try:
             for y in range(len(block)):
-                sumprods.append(sum(j*k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
-                sumweights.append(sum(k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y+1]], weightList[block[y]:block[y+1]])))
+                sumprods.append(sum(j * k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y + 1]], weightList[block[y]:block[y + 1]])))
+                sumweights.append(sum(k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y + 1]], weightList[block[y]:block[y + 1]])))
         except KeyError:
             pass
-        sumprods.insert(0, sum(j*k if isinstance(j, float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
+        sumprods.insert(0, sum(j * k if isinstance(j, float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
         sumweights.insert(0, sum(k if isinstance(j, float) else 0 for j, k in zip(markList[:block[0]], weightList[:block[0]])))
         for x in range(len(sumprods)):
             if sumprods[x] in ("", "-") or sumweights[x] == 0:
-                self.perclist.append(0.0)
+                self.perclist.append("")
                 self.labelList[x].setText("")
                 self.labelList2[x].setText("")
             else:
                 self.perclist.append(round((sumprods[x] / sumweights[x]), 2))
-                if self.perclist[x] != 0.0 and sumweights[x] < 1.001:
+                if sumweights[x] < 1.001:
                     self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>Your current percentage is: </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
                     self.labelList2[x].setText("<span style='font-size:12pt; font-weight:500'>Your current grade is: </span><span style='font-size:12pt'>" + self.mark_to_grade(self.perclist[x]) + "</span>")
                 elif sumweights[x] > 1.001:
@@ -300,7 +305,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             for x in range(len(self.data)):
                 for row, item in enumerate(self.data[x]["Final Mark"]):
                     table_item = table.item(row, 4)
-                    if table_item: # table_item is None if empty
+                    if table_item:  # table_item is None if empty
                         try:
                             mark = float(table_item.text())
                             self.paint_cell(table_item, mark)
@@ -310,12 +315,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             table.blockSignals(False)
 
     @staticmethod
-    def paint_cell(table_item, mark=None, breakpoints=[40, 50, 60, 70], color=["#ff0000","#ffdd00","#eaff00","#b7ff00","#00ff00"]):
+    def paint_cell(table_item, mark=None, breakpoints=[40, 50, 60, 70], color=["#ff0000", "#ffdd00", "#eaff00", "#b7ff00", "#00ff00"]):
         """ Sets table_item cell background to a colour based on its value unless it has an invalid value"""
         if not table_item:
             return
         if not mark:
-            mark = float(table_item.text())
+            try:
+                mark = float(table_item.text())
+            except ValueError:
+                return
         if mark == 0:
             table_item.setBackground(QtGui.QBrush())
             return
@@ -331,21 +339,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         table_item.setBackground(QtGui.QBrush(background))
 
     @staticmethod
-    def mark_to_grade(mark, breakpoints=[40, 50, 60, 70], grades=["Fail","Pass","2:2, Lower Second-Class","2:1, Upper Second-Class","First Class"]):
+    def mark_to_grade(mark, breakpoints=[40, 50, 60, 70], grades=["Fail", "Pass", "2:2, Lower Second-Class", "2:1, Upper Second-Class", "First Class"]):
         """ Checks mark against breakpoints and returns the appropriate grade """
+        if not mark:
+            return grades[0]
         i = bisect.bisect(breakpoints, mark)
         return grades[i]
 
     def marks_needed(self, row):
         """ Calculates mark needed using a formula when given the weight of the coursework and current percentage """
         try:
-            curr_perc = float(self.table_summary.item(row, 1).text())/100
-            for i, j in zip(range(4,8), reversed(range(4, 8))):
+            curr_perc = float(self.table_summary.item(row, 1).text()) / 100
+            for i, j in zip(range(4, 8), reversed(range(4, 8))):
                 cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
                 if cw_weight == 1.0:
                     break
 
-                mark = int(round(100*(i/10 - (curr_perc * cw_weight))/(1.0-cw_weight)))
+                mark = int(round(100 * (i / 10 - (curr_perc * cw_weight)) / (1.0 - cw_weight)))
                 item = QtWidgets.QTableWidgetItem(str(mark))
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItem(row, j, item)
@@ -354,6 +364,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 elif mark <= 0:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#00ff00'))
         except (AttributeError, ValueError):
+            # Marks are blank
+            for i in range(4, 8):
+                self.table_summary.setItem(row, i, QtWidgets.QTableWidgetItem())
             pass
 
 
@@ -362,7 +375,6 @@ class NotEditableTableItem(QtWidgets.QItemDelegate):
     Create a readOnly QTableWidgetItem
     """
     def __init__(self, parent):
-
         QtWidgets.QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
@@ -380,7 +392,6 @@ class NotEditableTableItem(QtWidgets.QItemDelegate):
 
 
 class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
