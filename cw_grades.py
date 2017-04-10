@@ -355,7 +355,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 if cw_weight == 1.0:
                     break
 
-                mark = int(round(100 * (i / 10 - (curr_perc * cw_weight)) / (1.0 - cw_weight)))
+                mark = int(100 * (i / 10 - (curr_perc * cw_weight)) / (1.0 - cw_weight))
                 item = QtWidgets.QTableWidgetItem(str(mark))
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItem(row, j, item)
