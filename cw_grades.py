@@ -351,11 +351,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         try:
             curr_perc = float(self.table_summary.item(row, 1).text()) / 100
             for i, j in zip(range(4, 8), reversed(range(4, 8))):
+                # target_mark takes values of 0.7, 0.6, 0.5 and 0.4
+                target_mark = i / 10.0
+                num_modules = self.table_summary.rowCount()
+                for x in range(num_modules):
+                    if self.table_summary.item(x, 0).text() == "DEN318":
+                        try:
+                            project_mark = self.perc_to_float(self.table_summary.item(x, 1).text())
+                        except ValueError:
+                            break
+                        target_mark = (target_mark * (num_modules + 1) - project_mark * 2) / (num_modules - 1)
+                        break
+                
                 cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
                 if cw_weight == 1.0:
                     break
-
-                mark = int(100 * (i / 10 - (curr_perc * cw_weight)) / (1.0 - cw_weight))
+                mark = round(100 * (target_mark - (curr_perc * cw_weight)) / (1.0 - cw_weight))
                 item = QtWidgets.QTableWidgetItem(str(mark))
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItem(row, j, item)
