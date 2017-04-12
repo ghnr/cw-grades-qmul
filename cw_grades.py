@@ -86,6 +86,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.moduleTab.setCurrentIndex(0)
         layout_summary = QtWidgets.QGridLayout(self.moduleTab.widget(0))
+        button_layout = QtWidgets.QGridLayout(self.moduleTab.widget(0))
+        layout_summary.addLayout(button_layout, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
         layout_summary.addWidget(self.table_summary, 1, 0, QtCore.Qt.AlignCenter)
         self.table_summary.setAlternatingRowColors(True)
         self.table_summary.verticalHeader().setVisible(False)
@@ -102,16 +104,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         weights_btn.setText("Get C/W weights")
         weights_btn.setToolTip("Grabs the percentage that coursework makes up for each module. This is a requirement to calculate the marks needed in the exam")
         weights_btn.adjustSize()
-        layout_summary.addWidget(weights_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        button_layout.addWidget(weights_btn, 0, 0)
         hide_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         hide_btn.setText("Hide exam marks")
         hide_btn.adjustSize()
-        layout_summary.addWidget(hide_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
+        button_layout.addWidget(hide_btn, 0, 0)
         show_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
         show_btn.setText("Show exam marks")
         show_btn.setToolTip("Displays the marks needed in the exam to obtain the grade shown")
         show_btn.adjustSize()
-        layout_summary.addWidget(show_btn, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
+        button_layout.addWidget(show_btn, 0, 0)
+        logout_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
+        logout_btn.setText("Logout")
+        logout_btn.adjustSize()
+        button_layout.addWidget(logout_btn, 0, 1)
         average_label = QtWidgets.QLabel(self.moduleTab.widget(0))
         layout_summary.addWidget(average_label, 2, 0, QtCore.Qt.AlignHCenter)
 
@@ -141,12 +147,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             hide_btn.show()
             show_btn.hide()
 
-        def resize_if_marks_shown():
-            if self.moduleTab.currentIndex() == 0 and hide_btn.isVisible():
-                MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
-            else:
-                MainWindow.setFixedSize(630, 400)
-
         def add_weights(row):
             if row < len(self.data):
                 MainWindow.setWindowTitle("Getting coursework weights...")
@@ -156,13 +156,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                     dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
                     dialog.ui = Form()
                     dialog.ui.setupUi(dialog)
-                    dialog.ui.label.setText("To get coursework weights, you must log in. Click OK to continue.")
-                    dialog.exec_()
+                    dialog.ui.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
+                    dialog_accepted = dialog.exec_()
                     dialog.show()
-                    global form
-                    form = LoginApp()
-                    form.show()
-                    MainWindow.close()
+                    if dialog_accepted:
+                        global form
+                        form = LoginApp()
+                        form.show()
+                        MainWindow.close()
                     return
                 self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
                 timer.singleShot(0, lambda: add_weights(row + 1))
@@ -173,12 +174,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 weights_btn.hide()
                 self.fillSummary()
                 show_btn.show()
-
+            
                 list_of_cw_weights = [self.table_summary.item(i, 3).text() for i in range(len(self.data))]
                 weights_file_w = open(path("weights"), "wb")
                 pickle.dump(list_of_cw_weights, weights_file_w)
                 weights_file_w.close()
-
+    
         try:
             import pickle
             weights_file_r = open(path("weights"), "rb")
@@ -190,18 +191,36 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             else:
                 show_btn.hide()
             weights_file_r.close()
-        
+    
         except (FileNotFoundError, EOFError):
             show_btn.hide()
             pass
-
+        
+        def logout():
+            try:
+                os.remove(path("data"))
+                os.remove(path("weights"))
+            except OSError:
+                pass
+            global form
+            form = LoginApp()
+            form.show()
+            MainWindow.close()
+            return
+        
+        def resize_if_marks_shown():
+            if self.moduleTab.currentIndex() == 0 and hide_btn.isVisible():
+                MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
+            else:
+                MainWindow.setFixedSize(630, 400)
+    
         self.moduleTab.currentChanged.connect(lambda: resize_if_marks_shown())
-
+    
         layout.addWidget(self.moduleTab)
         main_widget.setLayout(layout)
-
+    
         MainWindow.setCentralWidget(main_widget)
-
+    
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
