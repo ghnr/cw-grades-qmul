@@ -152,11 +152,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 MainWindow.setWindowTitle("Getting coursework weights...")
                 weight = login.get_weights(self.data[row]['Module'][0])
                 if weight == "Session Error":
-                    dialog = QtWidgets.QDialog(None, QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
+                    dialog = QtWidgets.QDialog()
                     dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
                     dialog.ui = Form()
                     dialog.ui.setupUi(dialog)
-                    dialog.ui.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
                     dialog_accepted = dialog.exec_()
                     dialog.show()
                     if dialog_accepted:
@@ -164,6 +163,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                         form = LoginApp()
                         form.show()
                         MainWindow.close()
+                    else:
+                        MainWindow.setWindowTitle("Grades")
                     return
                 self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
                 timer.singleShot(0, lambda: add_weights(row + 1))
