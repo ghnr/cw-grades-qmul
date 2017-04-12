@@ -9,6 +9,7 @@ s = requests.Session()
 def startLogin():
 
     while True:
+        s.cookies.clear()
         url = 'https://idcheck.qmul.ac.uk/idcheck'
         user = cw_grades.main_window().input_user()
         passw = cw_grades.main_window().input_pass()
