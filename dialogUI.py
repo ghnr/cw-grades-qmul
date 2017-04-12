@@ -11,7 +11,7 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignTop)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttonBox.setCenterButtons(True)
         self.verticalLayout.addWidget(self.buttonBox)
         font = QtGui.QFont()
