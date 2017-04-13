@@ -127,6 +127,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         hide_btn.clicked.connect(lambda: hideC())
         show_btn.clicked.connect(lambda: showC())
         weights_btn.clicked.connect(lambda: add_weights(0))
+        logout_btn.clicked.connect(lambda: logout())
 
         def hideC():
             for i in (4, 5, 6, 7):
@@ -231,7 +232,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             item = QtWidgets.QTableWidgetItem(str(self.perclist[i]))
             self.table_summary.setItem(i, 1, item)
             self.marks_needed(i)
-
             grade = self.mark_to_grade(self.perclist[i])
             if grade in ("First Class", "Fail", "Pass"):
                 if self.perclist[i] != "":
