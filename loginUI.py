@@ -44,14 +44,3 @@ class Ui_LoginWindow(object):
         self.label_username.setText("Username")
         self.label_password.setText("Password")
         self.btn_login.setText("Login")
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    LoginForm = QtWidgets.QMainWindow()
-    ui = Ui_LoginWindow()
-    ui.setupUi(LoginForm)
-    LoginForm.show()
-    sys.exit(app.exec_())
-

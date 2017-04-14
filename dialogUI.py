@@ -8,7 +8,6 @@ class Ui_Dialog(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setWordWrap(True)
-        self.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
         self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignTop)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -27,14 +26,4 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle("Login")
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())
 

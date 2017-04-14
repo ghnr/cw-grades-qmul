@@ -1,230 +1,120 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from dialogUI import Ui_Dialog as Form
+from dialogUI import Ui_Dialog
+from mainUI import Ui_Main
 import loginUI
 import login
 import sys
 import os
 import bisect
+import pickle
 
 
-class Ui_MainWindow(QtWidgets.QMainWindow):
+class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
     def __init__(self, data):
-        QtWidgets.QMainWindow.__init__(self)
-        self.data = data
-        self.tabList, self.tableList, self.labelList, self.labelList2 = ([] for _ in range(4))
-        self.perclist = []
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.moduleTab = QtWidgets.QTabWidget()
-        self.moduleTab.insertTab(0, QtWidgets.QWidget(), "Summary")
-        self.table_summary = QtWidgets.QTableWidget()
-
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(630, 400)
-        MainWindow.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
-
-        self.centralwidget.setObjectName("centralwidget")
-        layoutList, frameList, frame_labelList, layout_labelList = ([] for _ in range(4))
-
-        layout = QtWidgets.QVBoxLayout()
-        main_widget = QtWidgets.QWidget()
-
-        columns = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
-        stylesheet = """
-        QScrollBar:vertical, QScrollBar:horizontal {
-            width:12px;
-            height:12px;
-        }
-        QHeaderView::section{Background-color:rgb(34,221,81); font:bold}
-        QTableView{gridline-color: rgb(107, 107, 107)}
-        """
-
-        for i in range(len(self.data)):
-            self.tabList.append(QtWidgets.QWidget())
-            frame_labelList.append(QtWidgets.QFrame())
-            self.moduleTab.addTab(self.tabList[i], self.data[i]['Module'][0])
-
-            layout_labelList.append(QtWidgets.QVBoxLayout(frame_labelList[i]))
-            layoutList.append(QtWidgets.QVBoxLayout(self.tabList[i]))
-            self.labelList.append(QtWidgets.QLabel())
-            self.labelList2.append(QtWidgets.QLabel())
-            self.tableList.append(QtWidgets.QTableWidget(self.tabList[i]))
-
-            self.tableList[i].setColumnCount(len(columns))
-            self.tableList[i].setRowCount((len(self.data[i]["Module"])))
-            self.tableList[i].setHorizontalHeaderLabels(columns)
-            self.tableList[i].horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-            self.tableList[i].setColumnWidth(0, 90)
-            self.tableList[i].setColumnWidth(1, 170)
-            self.tableList[i].verticalHeader().setVisible(False)
-            self.tableList[i].setAlternatingRowColors(True)
-            self.tableList[i].setStyleSheet(stylesheet)
-
-            layout_labelList[i].addWidget(self.labelList[i])
-            layout_labelList[i].addWidget(self.labelList2[i])
-            self.labelList[i].setAlignment(QtCore.Qt.AlignCenter)
-            self.labelList2[i].setAlignment(QtCore.Qt.AlignCenter)
-            layoutList[i].addWidget(self.tableList[i], 0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
-            layoutList[i].addWidget(frame_labelList[i], 1, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
-
-        def average_exam_mark(column):
-            total = 0
-            count = 0
-            for row in range(self.table_summary.rowCount()):
-                try:
-                    total += float(self.table_summary.item(row, column).text())
-                    count += 1
-                except (AttributeError, ValueError):
-                    average_label.setText("")
-                    pass
-            if count > 0 and column == 1:
-                average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total / count, 1))))
-            elif count > 0:
-                average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total / count, 1))))
-
-        self.table_summary.cellPressed.connect(lambda: average_exam_mark(self.table_summary.currentColumn()))
-
-        self.moduleTab.setCurrentIndex(0)
-        layout_summary = QtWidgets.QGridLayout(self.moduleTab.widget(0))
-        button_layout = QtWidgets.QGridLayout(self.moduleTab.widget(0))
-        layout_summary.addLayout(button_layout, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
-        layout_summary.addWidget(self.table_summary, 1, 0, QtCore.Qt.AlignCenter)
-        self.table_summary.setAlternatingRowColors(True)
-        self.table_summary.verticalHeader().setVisible(False)
-        self.table_summary.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-        self.table_summary.setColumnCount(8)
-        self.table_summary.setStyleSheet(stylesheet)
-        self.table_summary.setHorizontalHeaderLabels(["Module", "Current %", "Current Grade", "C/W Weight", "First", "2:1", "2:2", "Pass"])
-        self.table_summary.setRowCount(len(self.data))
-        self.table_summary.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.table_summary.horizontalHeaderItem(1).setToolTip("Assumes you have at least attempted all of the coursework so far<p style='white-space:pre'>If there is a coursework that you didn't do and the deadline has passed, then you will need to manually set that coursework mark to 0 in the respective module tab")
-        for i in range(8):
-            self.table_summary.setItemDelegateForColumn(i, NotEditableTableItem(self.table_summary))
-        weights_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        weights_btn.setText("Get C/W weights")
-        weights_btn.setToolTip("Grabs the percentage that coursework makes up for each module. This is a requirement to calculate the marks needed in the exam")
-        weights_btn.adjustSize()
-        button_layout.addWidget(weights_btn, 0, 0)
-        hide_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        hide_btn.setText("Hide exam marks")
-        hide_btn.adjustSize()
-        button_layout.addWidget(hide_btn, 0, 0)
-        show_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        show_btn.setText("Show exam marks")
-        show_btn.setToolTip("Displays the marks needed in the exam to obtain the grade shown")
-        show_btn.adjustSize()
-        button_layout.addWidget(show_btn, 0, 0)
-        logout_btn = QtWidgets.QPushButton(self.moduleTab.widget(0))
-        logout_btn.setText("Logout")
-        logout_btn.adjustSize()
-        button_layout.addWidget(logout_btn, 0, 1)
-        average_label = QtWidgets.QLabel(self.moduleTab.widget(0))
-        layout_summary.addWidget(average_label, 2, 0, QtCore.Qt.AlignHCenter)
-
-        timer = QtCore.QTimer()
-        timer.setSingleShot(True)
-
-        hide_btn.clicked.connect(lambda: hideC())
-        show_btn.clicked.connect(lambda: showC())
-        weights_btn.clicked.connect(lambda: add_weights(0))
-        logout_btn.clicked.connect(lambda: logout())
-
-        def hideC():
-            for i in (4, 5, 6, 7):
-                self.table_summary.hideColumn(i)
-            MainWindow.setFixedSize(630, 400)
-            show_btn.show()
-            hide_btn.hide()
-            average_label.setText("")
-            if weights_btn.isVisible():
-                show_btn.hide()
+        Ui_Main.__init__(self, data)
+        Ui_Main.setupUi(self, MainWindow)
+        self.setup_data()
         
-        hideC()
-
-        def showC():
-            for i in (4, 5, 6, 7):
-                self.table_summary.showColumn(i)
-            MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
-            hide_btn.show()
-            show_btn.hide()
-
-        def add_weights(row):
-            if row < len(self.data):
-                MainWindow.setWindowTitle("Getting coursework weights...")
-                weight = login.get_weights(self.data[row]['Module'][0])
-                if weight == "Session Error":
-                    dialog = QtWidgets.QDialog()
-                    dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
-                    dialog.ui = Form()
-                    dialog.ui.setupUi(dialog)
-                    dialog_accepted = dialog.exec_()
-                    dialog.show()
-                    if dialog_accepted:
-                        global form
-                        form = LoginApp()
-                        form.show()
-                        MainWindow.close()
-                    else:
-                        MainWindow.setWindowTitle("Grades")
-                    return
-                self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
-                timer.singleShot(0, lambda: add_weights(row + 1))
-            else:
-                timer.stop()
-                timer.deleteLater()
-                MainWindow.setWindowTitle("Grades")
-                weights_btn.hide()
-                self.fillSummary()
-                show_btn.show()
-            
-                list_of_cw_weights = [self.table_summary.item(i, 3).text() for i in range(len(self.data))]
-                weights_file_w = open(path("weights"), "wb")
-                pickle.dump(list_of_cw_weights, weights_file_w)
-                weights_file_w.close()
-    
+    def setup_data(self):
         try:
-            import pickle
             weights_file_r = open(path("weights"), "rb")
             pickle_weights = pickle.load(weights_file_r)  # have to unwrap layers of pickle
             if len(pickle_weights) == len(self.data):
                 for x in range(len(self.data)):
                     self.table_summary.setItem(x, 3, QtWidgets.QTableWidgetItem(pickle_weights[x]))
-                weights_btn.hide()
+                self.weights_btn.hide()
             else:
-                show_btn.hide()
+                self.show_btn.hide()
             weights_file_r.close()
-    
         except (FileNotFoundError, EOFError):
-            show_btn.hide()
+            self.show_btn.hide()
+        
+        self.dict2table()
+        self.hide_columns()
+        self.update_widgets()
+    
+        timer = QtCore.QTimer()
+        timer.setSingleShot(True)
+        
+        self.moduleTab.currentChanged.connect(lambda: self.resize_if_marks_shown())
+        self.table_summary.cellPressed.connect(lambda: self.average_exam_mark(self.table_summary.currentColumn()))
+        self.hide_btn.clicked.connect(lambda: self.hide_columns())
+        self.show_btn.clicked.connect(lambda: self.show_columns())
+        self.weights_btn.clicked.connect(lambda: self.add_weights(timer, 0))
+        self.logout_btn.clicked.connect(lambda: self.logout())
+        
+        for table in self.tableList:
+            table.cellChanged.connect(lambda: self.update_widgets())
+
+    def hide_columns(self):
+        for i in (4, 5, 6, 7):
+            self.table_summary.hideColumn(i)
+        MainWindow.setFixedSize(630, 400)
+        self.show_btn.show()
+        self.hide_btn.hide()
+        self.average_label.setText("")
+        if not self.weights_btn.isHidden():
+            self.show_btn.hide()
+
+    def show_columns(self):
+        for i in (4, 5, 6, 7):
+            self.table_summary.showColumn(i)
+        MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
+        self.hide_btn.show()
+        self.show_btn.hide()
+
+    def add_weights(self, timer, row):
+        if row < len(self.data):
+            MainWindow.setWindowTitle("Getting coursework weights...")
+            weight = login.get_weights(self.data[row]['Module'][0])
+            if weight == "Session Error":
+                dialog = QtWidgets.QDialog()
+                dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
+                dialog_ui = Ui_Dialog()
+                dialog_ui.setupUi(dialog)
+                dialog_ui.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
+                dialog_accepted = dialog.exec_()
+                dialog.show()
+                if dialog_accepted:
+                    global form
+                    form = LoginApp()
+                    form.show()
+                    MainWindow.close()
+                else:
+                    MainWindow.setWindowTitle("Grades")
+                return
+            self.table_summary.setItem(row, 3, QtWidgets.QTableWidgetItem(weight))
+            timer.singleShot(0, lambda: self.add_weights(timer, row + 1))
+        else:
+            timer.stop()
+            timer.deleteLater()
+            MainWindow.setWindowTitle("Grades")
+            self.weights_btn.hide()
+            self.show_btn.show()
+            self.fillSummary()
+        
+            list_of_cw_weights = [self.table_summary.item(i, 3).text() for i in range(len(self.data))]
+            weights_file_w = open(path("weights"), "wb")
+            pickle.dump(list_of_cw_weights, weights_file_w)
+            weights_file_w.close()
+
+    @staticmethod
+    def logout():
+        try:
+            os.remove(path("data"))
+            os.remove(path("weights"))
+        except OSError:
             pass
-        
-        def logout():
-            try:
-                os.remove(path("data"))
-                os.remove(path("weights"))
-            except OSError:
-                pass
-            global form
-            form = LoginApp()
-            form.show()
-            MainWindow.close()
-            return
-        
-        def resize_if_marks_shown():
-            if self.moduleTab.currentIndex() == 0 and hide_btn.isVisible():
-                MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
-            else:
-                MainWindow.setFixedSize(630, 400)
-    
-        self.moduleTab.currentChanged.connect(lambda: resize_if_marks_shown())
-    
-        layout.addWidget(self.moduleTab)
-        main_widget.setLayout(layout)
-    
-        MainWindow.setCentralWidget(main_widget)
-    
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        global form
+        form = LoginApp()
+        form.show()
+        MainWindow.close()
+
+    def resize_if_marks_shown(self):
+        if self.moduleTab.currentIndex() == 0 and self.hide_btn.isVisible():
+            MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
+        else:
+            MainWindow.setFixedSize(630, 400)
 
     def fillSummary(self):
         for i in range(len(self.data)):
@@ -242,18 +132,27 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade[5:17]))
             self.paint_cell(self.table_summary.item(i, 1))
 
-    def retranslateUi(self, MainWindow):
-        self.dict2table()
+    def update_widgets(self):
         self.currPc()
         self.cell_color_value()
         self.fillSummary()
-        for table in self.tableList:
-            table.cellChanged.connect(lambda: self.currPc())
-            table.cellChanged.connect(lambda: self.cell_color_value())
-            table.cellChanged.connect(lambda: self.fillSummary())
+        self.average_exam_mark(self.table_summary.currentColumn())
 
-        MainWindow.setWindowTitle("Grades")
-
+    def average_exam_mark(self, column):
+        total = 0
+        count = 0
+        for row in range(self.table_summary.rowCount()):
+            try:
+                total += float(self.table_summary.item(row, column).text())
+                count += 1
+            except (AttributeError, ValueError):
+                self.average_label.setText("")
+                pass
+        if count > 0 and column == 1:
+            self.average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total / count, 1))))
+        elif count > 0:
+            self.average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total / count, 1))))
+        
     def dict2table(self):
         columns = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
         for i, table in enumerate(self.tableList):
@@ -435,22 +334,22 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
         doLogin_return = login.startLogin()
         dialog = QtWidgets.QDialog(None, QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
         dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
-        dialog.ui = Form()
-        dialog.ui.setupUi(dialog)
+        dialog_ui = Ui_Dialog()
+        dialog_ui.setupUi(dialog)
 
         if doLogin_return == "Fail":
             self.setWindowTitle("Login")
-            dialog.ui.label.setText("Login failed. Please try again.")
+            dialog_ui.label.setText("Login failed. Please try again.")
             dialog.exec_()
             dialog.show()
         elif doLogin_return == "Empty Fail":
             self.setWindowTitle("Login")
-            dialog.ui.label.setText("Please enter your login details and try again.")
+            dialog_ui.label.setText("Please enter your login details and try again.")
             dialog.exec_()
             dialog.show()
         elif doLogin_return == "Connection Fail":
             self.setWindowTitle("Login")
-            dialog.ui.label.setText("Failed to establish a connection. Please check your network settings and the status of SEMS Intranet.")
+            dialog_ui.label.setText("Failed to establish a connection. Please check your network settings and the status of SEMS Intranet.")
             dialog.exec_()
             dialog.show()
         else:
@@ -491,8 +390,7 @@ def path(file_name, packaged=False):
 def open_main_window(data):
     global MainWindow
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow(data)
-    ui.setupUi(MainWindow)
+    Ui_MainWindow(data)
     MainWindow.show()
 
 
