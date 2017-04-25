@@ -162,6 +162,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
                     self.tableList[i].setItem(row, x, new_item)
                     if column == "Final Mark":
                         new_item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        table.setItemDelegateForColumn(x, TransparentSelectionTableItem(table))
                     else:
                         if column == "Mark":
                             new_item.setTextAlignment(QtCore.Qt.AlignCenter)
@@ -319,6 +320,16 @@ class NotEditableTableItem(QtWidgets.QItemDelegate):
 
     def setModelData(self, editor, model, index):
         model.setData(index, editor.text())
+
+
+class TransparentSelectionTableItem(QtWidgets.QStyledItemDelegate):
+    def __init__(self, parent):
+        QtWidgets.QStyledItemDelegate.__init__(self, parent)
+
+    def initStyleOption(self, option, index):
+        super(TransparentSelectionTableItem,self).initStyleOption(option, index)
+        if option.state & QtWidgets.QStyle.State_Selected:
+            option.state &= ~QtWidgets.QStyle.State_Selected
 
 
 class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
