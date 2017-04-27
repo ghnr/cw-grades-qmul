@@ -65,7 +65,7 @@ class Ui_Main(object):
         self.moduleTab.insertTab(0, QtWidgets.QWidget(), "Summary")
         self.moduleTab.setCurrentIndex(0)
         layout_summary = QtWidgets.QGridLayout(self.moduleTab.widget(0))
-        button_layout = QtWidgets.QGridLayout(self.moduleTab.widget(0))
+        button_layout = QtWidgets.QGridLayout()
         layout_summary.addLayout(button_layout, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignRight)
         layout_summary.addWidget(self.table_summary, 1, 0, QtCore.Qt.AlignCenter)
         self.table_summary.setAlternatingRowColors(True)
