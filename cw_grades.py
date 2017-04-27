@@ -143,7 +143,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         count = 0
         for row in range(self.table_summary.rowCount()):
             try:
-                total += float(self.table_summary.item(row, column).data(1))
+                if column == 1:
+                    value = float(self.table_summary.item(row, column).text())
+                else:
+                    value = self.table_summary.item(row, column).data(1)
+                total += value
                 count += 1
             except (AttributeError, ValueError, TypeError):
                 self.average_label.setText("")
