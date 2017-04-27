@@ -71,7 +71,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
                 dialog = QtWidgets.QDialog()
                 dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
                 dialog_ui = Ui_Dialog()
-                dialog_ui.setupUi(dialog)
+                dialog_ui.setupUi(dialog, cancel=True)
                 dialog_ui.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
                 dialog_accepted = dialog.exec_()
                 dialog.show()
