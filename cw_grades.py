@@ -131,6 +131,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
             else:
                 self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade[5:17]))
             self.paint_cell(self.table_summary.item(i, 1))
+        self.adjust_for_project()
 
     def update_widgets(self):
         self.currPc()
@@ -277,25 +278,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
             for i, j in zip(range(4, 8), reversed(range(4, 8))):
                 # target_mark takes values of 0.7, 0.6, 0.5 and 0.4
                 target_mark = i / 10.0
-                target_mark_adj = target_mark
-                num_modules = self.table_summary.rowCount()
-                for x in range(num_modules):
-                    if self.table_summary.item(x, 0).text() == "DEN318":
-                        try:
-                            project_mark = self.perc_to_float(self.table_summary.item(x, 1).text())
-                        except ValueError:
-                            break
-                        target_mark_adj = ((target_mark * (num_modules + 1)) - project_mark * 2) / (num_modules - 1)
-                        break
-                
+
                 cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
                 if cw_weight == 1.0:
                     break
                 mark = round(100 * (target_mark - (curr_perc * cw_weight)) / (1.0 - cw_weight))
-                mark_adj = round(100 * (target_mark_adj - (curr_perc * cw_weight)) / (1.0 - cw_weight))
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(str(mark))
-                item.setData(1, mark_adj)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItem(row, j, item)
                 if mark > 100:
@@ -307,6 +296,45 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
             for i in range(4, 8):
                 self.table_summary.setItem(row, i, QtWidgets.QTableWidgetItem())
             pass
+
+    def adjust_for_project(self):
+        for row in range(self.table_summary.rowCount()):
+            try:
+                curr_perc = float(self.table_summary.item(row, 1).text()) / 100
+                for i, j in zip(range(4, 8), reversed(range(4, 8))):
+                    target_mark = i / 10.0
+                    target_mark_adj = target_mark
+
+                    # scrappy method, getting each module's credits would be (slow but) ideal
+                    project_row = 0
+                    project_module = False
+                    project_module_value = 2
+                    for x in self.data:
+                        if self.data[x]['Module'][0] == "DEN318":
+                            project_row = x
+                            project_module = True
+                        elif self.data[x]['Module'][0] == "MAT7400":
+                            project_row = x
+                            project_module = True
+                            project_module_value = 4
+
+                    if project_module:
+                        try:
+                            project_mark = self.perc_to_float(self.table_summary.item(project_row, 1).text())
+                        except ValueError:
+                            break
+                        total_credits = 8
+                        target_mark_adj = ((target_mark * total_credits) - (project_mark * project_module_value)) / (total_credits - project_module_value)
+
+                    cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
+                    if cw_weight == 1.0:
+                        break
+                    mark_adj = round(100 * (target_mark_adj - (curr_perc * cw_weight)) / (1.0 - cw_weight))
+                    item = self.table_summary.item(row, j)
+                    item.setData(1, mark_adj)
+                    self.table_summary.setItem(row, j, item)
+            except (AttributeError, ValueError):
+                pass
 
 
 class NotEditableTableItem(QtWidgets.QItemDelegate):
