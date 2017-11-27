@@ -40,6 +40,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         self.table_summary.cellPressed.connect(lambda: self.average_exam_mark(self.table_summary.currentColumn()))
         self.hide_btn.clicked.connect(lambda: self.hide_columns())
         self.show_btn.clicked.connect(lambda: self.show_columns())
+        self.custom_mark_btn.clicked.connect(lambda: self.custom_mark())
         self.weights_btn.clicked.connect(lambda: self.add_weights(timer, 0))
         self.logout_btn.clicked.connect(lambda: self.logout())
         
@@ -52,6 +53,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         MainWindow.setFixedSize(630, 400)
         self.show_btn.show()
         self.hide_btn.hide()
+        self.custom_mark_btn.hide()
         self.average_label.setText("")
         if not self.weights_btn.isHidden():
             self.show_btn.hide()
@@ -62,19 +64,37 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
         self.hide_btn.show()
         self.show_btn.hide()
+        self.custom_mark_btn.show()
+        
+    def custom_mark(self):
+        custom_mark_dialog = QtWidgets.QInputDialog()
+        custom_mark_dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
+        try:
+            default_mark = float(self.table_summary.horizontalHeaderItem(8).text())
+        except ValueError:
+            default_mark = 70.0
+        custom_mark, dialog_result = QtWidgets.QInputDialog.getDouble(custom_mark_dialog, "Custom mark",
+                                                            "Enter a custom target mark:", default_mark, 0.1, 100.0, 2)
+        if dialog_result:
+            self.table_summary.showColumn(8)
+            self.table_summary.setHorizontalHeaderItem(8, QtWidgets.QTableWidgetItem(str(round(custom_mark, 2))))
+            for row in range(self.table_summary.rowCount()):
+                self.marks_needed(row, custom_mark)
+            self.adjust_for_project(custom_mark)
+            self.average_exam_mark(self.table_summary.currentColumn())
+            MainWindow.setFixedSize(self.moduleTab.sizeHint().width() + 20, 400)
 
     def add_weights(self, timer, row):
         if row < len(self.data):
             MainWindow.setWindowTitle("Getting coursework weights...")
             weight = login.get_weights(self.data[row]['Module'][0])
             if weight == "Session Error":
-                dialog = QtWidgets.QDialog()
-                dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
-                dialog_ui = Ui_Dialog()
-                dialog_ui.setupUi(dialog, cancel=True)
+                weights_dialog = QtWidgets.QDialog()
+                weights_dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
+                dialog_ui = Ui_Dialog(weights_dialog, allow_cancel=True)
+                dialog_ui.setupUi()
                 dialog_ui.label.setText("To get coursework weights, you must log in.\nClick OK to continue.")
-                dialog_accepted = dialog.exec_()
-                dialog.show()
+                dialog_accepted = weights_dialog.exec_()
                 if dialog_accepted:
                     global form
                     form = LoginApp()
@@ -131,12 +151,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
             else:
                 self.table_summary.setItem(i, 2, QtWidgets.QTableWidgetItem(grade[5:17]))
             self.paint_cell(self.table_summary.item(i, 1))
-        self.adjust_for_project()
 
     def update_widgets(self):
         self.currPc()
         self.cell_color_value()
         self.fillSummary()
+        self.adjust_for_project()
+        try:
+            custom_mark = float(self.table_summary.horizontalHeaderItem(8).text())
+            for row in range(self.table_summary.rowCount()):
+                self.marks_needed(row, custom_mark)
+            self.adjust_for_project(custom_mark)
+        except (ValueError, AttributeError):
+            pass
         self.average_exam_mark(self.table_summary.currentColumn())
 
     def average_exam_mark(self, column):
@@ -275,68 +302,88 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         i = bisect.bisect(breakpoints, mark)
         return grades[i]
 
-    def marks_needed(self, row):
+    def marks_needed(self, row, custom_mark=None):
         """ Calculates mark needed using a formula when given the weight of the coursework and current percentage """
         try:
             curr_perc = float(self.table_summary.item(row, 1).text()) / 100
+            cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
+            if cw_weight == 1.0:
+                raise ValueError
             for i, j in zip(range(4, 8), reversed(range(4, 8))):
                 # target_mark takes values of 0.7, 0.6, 0.5 and 0.4
-                target_mark = i / 10.0
+                if custom_mark:
+                    target_mark = custom_mark / 100.0
+                    # 8 is the custom mark column number
+                    j = 8
+                else:
+                    target_mark = i / 10.0
 
-                cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
-                if cw_weight == 1.0:
-                    break
                 mark = round(100 * (target_mark - (curr_perc * cw_weight)) / (1.0 - cw_weight))
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(str(mark))
+                item.setData(1, mark)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_summary.setItem(row, j, item)
+                
                 if mark > 100:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#ff0000'))
                 elif mark <= 0:
                     self.table_summary.item(row, j).setForeground(QtGui.QColor('#00ff00'))
+                if custom_mark:
+                    break
         except (AttributeError, ValueError):
             # Marks are blank
-            for i in range(4, 8):
+            for i in range(4, 9):
                 self.table_summary.setItem(row, i, QtWidgets.QTableWidgetItem())
             pass
 
-    def adjust_for_project(self):
+    def adjust_for_project(self, custom_mark=None):
+        """ Adjust all marks to take into account the project module's weighting """
         for row in range(self.table_summary.rowCount()):
             try:
                 curr_perc = float(self.table_summary.item(row, 1).text()) / 100
-                for i, j in zip(range(4, 8), reversed(range(4, 8))):
-                    target_mark = i / 10.0
-                    target_mark_adj = target_mark
+                cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
+                if cw_weight == 1.0:
+                    continue
 
-                    # scrappy method, getting each module's credits would be (slow but) ideal
-                    project_row = 0
-                    project_module = False
-                    project_module_value = 2
-                    for x in self.data:
-                        if self.data[x]['Module'][0] == "DEN318":
-                            project_row = x
-                            project_module = True
-                        elif self.data[x]['Module'][0] == "MAT7400":
-                            project_row = x
-                            project_module = True
-                            project_module_value = 4
+                # scrappy method, getting each module's credits would be (slow but) ideal
+                project_row = 0
+                project_module = False
+                project_module_value = 2
+                for x in self.data:
+                    if self.data[x]['Module'][0] == "DEN318":
+                        project_row = x
+                        project_module = True
+                    elif self.data[x]['Module'][0] == "MAT7400":
+                        project_row = x
+                        project_module = True
+                        project_module_value = 4
+                        
+                for i, j in zip(range(4, 8), reversed(range(4, 8))):
+                    if custom_mark:
+                        try:
+                            target_mark = custom_mark / 100.0
+                            j = 8
+                        except (ValueError, AttributeError):
+                            target_mark = i / 10.0
+                    else:
+                        target_mark = i / 10.0
+                    target_mark_adj = target_mark
 
                     if project_module:
                         try:
                             project_mark = self.perc_to_float(self.table_summary.item(project_row, 1).text())
+                            total_credits = 8
+                            target_mark_adj = ((target_mark * total_credits) - (project_mark * project_module_value)) / (
+                                              total_credits - project_module_value)
                         except ValueError:
-                            break
-                        total_credits = 8
-                        target_mark_adj = ((target_mark * total_credits) - (project_mark * project_module_value)) / (total_credits - project_module_value)
-
-                    cw_weight = self.perc_to_float(self.table_summary.item(row, 3).text())
-                    if cw_weight == 1.0:
-                        break
+                            pass
                     mark_adj = round(100 * (target_mark_adj - (curr_perc * cw_weight)) / (1.0 - cw_weight))
                     item = self.table_summary.item(row, j)
                     item.setData(1, mark_adj)
                     self.table_summary.setItem(row, j, item)
+                    if custom_mark:
+                        break
             except (AttributeError, ValueError):
                 pass
 
@@ -385,8 +432,8 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
         doLogin_return = login.startLogin()
         dialog = QtWidgets.QDialog(None, QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
         dialog.setWindowIcon(QtGui.QIcon(path("icon.png", True)))
-        dialog_ui = Ui_Dialog()
-        dialog_ui.setupUi(dialog)
+        dialog_ui = Ui_Dialog(dialog)
+        dialog_ui.setupUi()
 
         if doLogin_return == "Fail":
             self.setWindowTitle("Login")

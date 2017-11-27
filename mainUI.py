@@ -10,7 +10,7 @@ class Ui_Main(object):
         self.moduleTab = QtWidgets.QTabWidget()
         self.table_summary = QtWidgets.QTableWidget()
         self.average_label = QtWidgets.QLabel(self.moduleTab.widget(0))
-        self.weights_btn, self.hide_btn, self.show_btn, self.logout_btn = (QtWidgets.QPushButton(self.moduleTab.widget(0)) for _ in range(4))
+        self.weights_btn, self.hide_btn, self.show_btn, self.logout_btn, self.custom_mark_btn = (QtWidgets.QPushButton(self.moduleTab.widget(0)) for _ in range(5))
         
     
     def setupUi(self, MainWindow):
@@ -71,15 +71,16 @@ class Ui_Main(object):
         self.table_summary.setAlternatingRowColors(True)
         self.table_summary.verticalHeader().setVisible(False)
         self.table_summary.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-        self.table_summary.setColumnCount(8)
+        self.table_summary.setColumnCount(9)
         self.table_summary.setStyleSheet(stylesheet)
         self.table_summary.setHorizontalHeaderLabels(
-            ["Module", "Current %", "Current Grade", "C/W Weight", "First", "2:1", "2:2", "Pass"])
+            ["Module", "Current %", "Current Grade", "C/W Weight", "First", "2:1", "2:2", "Pass", "CustomMark"])
+        self.table_summary.hideColumn(8)
         self.table_summary.setRowCount(len(self.data))
         self.table_summary.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table_summary.horizontalHeaderItem(1).setToolTip(
             "Assumes you have at least attempted all of the coursework so far\nIf there is a coursework that you didn't do and the deadline has passed, then you will need to manually set that coursework mark to 0 in the respective module tab")
-        for i in range(8):
+        for i in range(self.table_summary.columnCount()):
             self.table_summary.setItemDelegateForColumn(i, NotEditableTableItem(self.table_summary))
         
         self.weights_btn.setText("Get C/W weights")
@@ -88,17 +89,22 @@ class Ui_Main(object):
         self.weights_btn.adjustSize()
         button_layout.addWidget(self.weights_btn, 0, 0)
 
+        self.custom_mark_btn.setText("Custom mark")
+        self.custom_mark_btn.setToolTip("Enter a custom target mark")
+        self.custom_mark_btn.adjustSize()
+        button_layout.addWidget(self.custom_mark_btn, 0, 0)
+
         self.hide_btn.setText("Hide exam marks")
         self.hide_btn.adjustSize()
-        button_layout.addWidget(self.hide_btn, 0, 0)
+        button_layout.addWidget(self.hide_btn, 0, 1)
         self.show_btn.setText("Show exam marks")
         self.show_btn.setToolTip("Displays the marks needed in the exam to obtain the grade shown")
         self.show_btn.adjustSize()
-        button_layout.addWidget(self.show_btn, 0, 0)
+        button_layout.addWidget(self.show_btn, 0, 1)
 
         self.logout_btn.setText("Logout")
         self.logout_btn.adjustSize()
-        button_layout.addWidget(self.logout_btn, 0, 1)
+        button_layout.addWidget(self.logout_btn, 0, 2)
         layout_summary.addWidget(self.average_label, 2, 0, QtCore.Qt.AlignHCenter)
         
         layout.addWidget(self.moduleTab)
@@ -140,4 +146,3 @@ def path(file_name, packaged=False):
 
     base_path = os.path.dirname(sys.argv[0])
     return os.path.join(base_path, file_name)
-

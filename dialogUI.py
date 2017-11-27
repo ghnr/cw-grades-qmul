@@ -3,28 +3,31 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 class Ui_Dialog(object):
 
-    def setupUi(self, Dialog, cancel=False):
-        self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
-        self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
+    def __init__(self, Dialog, allow_cancel=False, entry=False):
+        self.dialog = Dialog
+        self.vertical_layout = QtWidgets.QVBoxLayout(Dialog)
         self.label = QtWidgets.QLabel(Dialog)
-        self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignTop)
-        self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        Dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
-        if cancel:
-            self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.button_box = QtWidgets.QDialogButtonBox(Dialog)
+        self.allow_cancel = allow_cancel
+        self.entry = entry
+
+    def setupUi(self):
+        self.dialog.setWindowTitle("Login")
+        self.vertical_layout.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
+        self.vertical_layout.addWidget(self.label, 0, QtCore.Qt.AlignTop)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+
+        self.dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowTitleHint)
+        if self.allow_cancel:
+            self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         else:
-            self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setCenterButtons(True)
-        self.verticalLayout.addWidget(self.buttonBox)
+            self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
+        self.button_box.setCenterButtons(True)
+        self.vertical_layout.addWidget(self.button_box)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.label.setFont(font)
+        self.button_box.accepted.connect(self.dialog.accept)
+        self.button_box.rejected.connect(self.dialog.reject)
+        QtCore.QMetaObject.connectSlotsByName(self.dialog)
 
-        self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
-        self.buttonBox.rejected.connect(Dialog.reject)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-    def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle("Login")
