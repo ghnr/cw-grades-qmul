@@ -156,7 +156,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         if count > 0 and column == 1:
             self.average_label.setText("<span style='font-size:12pt'>Average coursework percentage: {0}%</span>".format(str(round(total / count, 1))))
         elif count > 0:
-            self.average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(self.table_summary.horizontalHeaderItem(column).text(), str(round(total / count, 1))))
+            self.average_label.setText("<span style='font-size:12pt'>Average mark needed for a {0}: {1}</span>".format(
+                self.table_summary.horizontalHeaderItem(column).text(), str(round(total / count, 1))))
         
     def dict2table(self):
         columns = ["Due Date", "Coursework Title", "Weight", "Mark", "Final Mark"]
@@ -217,11 +218,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
                 self.labelList2[x].setText("")
             else:
                 self.perclist.append(round((sumprods[x] / sumweights[x]), 2))
+                span_style = "<span style='font-size:12pt; font-weight:500'>{}</span><span style='font-size:12pt'>{}</span>"
                 if sumweights[x] < 1.001:
-                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>Your current percentage is: </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
-                    self.labelList2[x].setText("<span style='font-size:12pt; font-weight:500'>Your current grade is: </span><span style='font-size:12pt'>" + self.mark_to_grade(self.perclist[x]) + "</span>")
+                    self.labelList[x].setText(span_style.format("Your current percentage is: ", str(self.perclist[x]) + "%"))
+                    self.labelList2[x].setText(span_style.format("Your current grade is: ", self.mark_to_grade(self.perclist[x])))
                 elif sumweights[x] > 1.001:
-                    self.labelList[x].setText("<span style='font-size:12pt; font-weight:500'>(Sum of weights is >100%): </span><span style='font-size:12pt'>" + str(self.perclist[x]) + "%</span>")
+                    self.labelList[x].setText(span_style.format("(Sum of weights is >100%): ", str(self.perclist[x]) + "%"))
 
     def cell_color_value(self):
         """ Feeds every mark from the table to the paint_cell function """
@@ -264,8 +266,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
         table_item.setBackground(QtGui.QBrush(background))
 
     @staticmethod
-    def mark_to_grade(mark, breakpoints=[40, 50, 60, 70], grades=["Fail", "Pass", "2:2, Lower Second-Class", "2:1, Upper Second-Class", "First Class"]):
+    def mark_to_grade(mark):
         """ Checks mark against breakpoints and returns the appropriate grade """
+        breakpoints = [40, 50, 60, 70]
+        grades = ["Fail", "Pass", "2:2, Lower Second-Class", "2:1, Upper Second-Class", "First Class"]
         if not mark:
             return grades[0]
         i = bisect.bisect(breakpoints, mark)
