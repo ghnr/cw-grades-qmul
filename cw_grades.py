@@ -451,7 +451,7 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
             dialog.exec_()
             dialog.show()
         else:
-            data = login.FormatData(doLogin_return)
+            data = login.format_data(doLogin_return)
             dialog.close()
             self.close()
 

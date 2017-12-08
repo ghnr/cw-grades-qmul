@@ -16,10 +16,11 @@ def startLogin():
         if len(user) <= 2 or len(passw) <= 3:
             return "Empty Fail"
         try:
-            s.get('https://admin.sems.qmul.ac.uk/studentweb/cwdiary/')
+            cw_url = 'https://admin.sems.qmul.ac.uk/studentweb/cwdiary/'
+            s.get(cw_url)
             login_data = dict(username=user, password=passw)
             response = s.post(url, data=login_data)
-            page = s.get('https://admin.sems.qmul.ac.uk/studentweb/cwdiary/')
+            page = s.get(cw_url)
         except requests.exceptions.RequestException:
             return "Connection Fail"
 
@@ -39,7 +40,7 @@ def startLogin():
     return newDict
 
 
-def FormatData(data):
+def format_data(data):
     from datetime import datetime
     import pandas as pd
 
@@ -60,7 +61,7 @@ def FormatData(data):
     df_semesters.sort_values(['Issue Date'], ascending = [True], inplace = [True])
     unique_modules = pd.unique(df_semesters.Module.ravel())
 
-    df = pd.DataFrame(data, columns=['Due Date','Module', 'Coursework Title', 'Weight', 'Mark', 'Final Mark'])
+    df = pd.DataFrame(data, columns=['Due Date','Module', 'Coursework Title', 'Weight', 'Mark‡', 'Final Mark‡'])
     # Don't have to convert to pd.datetime because we don't have to sort it
 
     formatted_data = {}
@@ -69,6 +70,10 @@ def FormatData(data):
         df_dummy = df[df['Module'] == module]
         dict_dummy = pd.DataFrame.to_dict(df_dummy, 'list')
         formatted_data[i] = dict_dummy
+    
+    for module in formatted_data:
+        formatted_data[module]['Mark'] = formatted_data[module].pop('Mark‡')
+        formatted_data[module]['Final Mark'] = formatted_data[module].pop('Final Mark‡')
 
     return formatted_data
 
@@ -88,4 +93,3 @@ def get_weights(module):
         return "Session Error"
 
     return re.search('(\d+)%', weight_text).group() #finds the string of a unicode digit object
-
