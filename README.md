@@ -1,4 +1,4 @@
-**Not maintained. Currently have no access to the intranet. Repo being cloned to new username.**
+**Not maintained. Currently have no access to the intranet.**
 
 # Coursework Grades
 
