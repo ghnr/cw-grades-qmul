@@ -7,6 +7,7 @@ import sys
 import os
 import bisect
 import pickle
+import datetime
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
@@ -232,6 +233,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, Ui_Main):
             block[v] = total
         try:
             for y in range(len(block)):
+                # not my method:
                 sumprods.append(sum(j * k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y + 1]], weightList[block[y]:block[y + 1]])))
                 sumweights.append(sum(k if isinstance(j, float) else 0 for j, k in zip(markList[block[y]:block[y + 1]], weightList[block[y]:block[y + 1]])))
         except KeyError:
@@ -455,10 +457,9 @@ class LoginApp(QtWidgets.QMainWindow, loginUI.Ui_LoginWindow):
             dialog.close()
             self.close()
 
-            import main
             file = open(path("data"), "wb")
-            main.pickle.dump(main.datetime.datetime.today(), file)
-            main.pickle.dump(data, file)
+            pickle.dump(datetime.datetime.today(), file)
+            pickle.dump(data, file)
             file.close()
 
             open_main_window(data)
