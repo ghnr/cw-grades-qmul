@@ -1,13 +1,15 @@
-import cw_grades
+from datetime import datetime
+import re
 import requests
 import lxml.html
-import re
+import pandas as pd
+import cw_grades
+
 
 s = requests.Session()
 
 
 def startLogin():
-
     while True:
         s.cookies.clear()
         url = 'https://idcheck.qmul.ac.uk/idcheck'
@@ -41,9 +43,6 @@ def startLogin():
 
 
 def format_data(data):
-    from datetime import datetime
-    import pandas as pd
-
     def string_to_date(item):
         date_string = datetime.strptime(item, '%a %d %b %y').strftime('%d/%m/%Y')
         return date_string
